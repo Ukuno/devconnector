@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs');
 const jwt  =  require('jsonwebtoken');
 const passport = require('passport');
 
+//load input validation
+const validateRegisterInput = require('../../validation/register');
+
 //model of the user
 const User = require('../../models/user');
 
@@ -21,6 +24,14 @@ router.get('/test', (req, res) => res.json({ msg : 'this the users page'}));
 //@desc    register
 //@access  Public
 router.post('/register', (req, res) => {
+
+    const { errors, isValid } = validateRegisterInput(req.body);
+
+    //check validation
+    if(!isValid){
+       return res.status(400).json(errors);
+    }
+
     User.findOne({email : req.body.email})
         .then(user => {
             if(user){
@@ -86,7 +97,8 @@ router.post('/login', (req,res) => {
                 } else {
                    return res.status(400).json({ msg : 'failed to login'});
                 }
-            });
+            })
+            .catch(err => console.log(err));
         })
         .catch(err => console.log(err));
 });
