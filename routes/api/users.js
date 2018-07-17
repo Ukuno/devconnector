@@ -3,6 +3,7 @@ const router = express.Router();
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const jwt  =  require('jsonwebtoken');
+const passport = require('passport');
 
 //model of the user
 const User = require('../../models/user');
@@ -65,7 +66,10 @@ router.post('/login', (req,res) => {
             } 
 
             //check if password match
-            bcrypt.compare(password, user.password).then(isMatch => {
+            bcrypt.compare(password, user.password, (err) => {
+                if(err) throw err;
+            })
+            .then(isMatch => {
                 if(isMatch) {
                     // res.json({ msg : 'user success'});
                     const payload = { id: user.id,  name : user.name, avatar :user.avatar};
@@ -73,7 +77,7 @@ router.post('/login', (req,res) => {
                     //sign Token JWT
                     jwt.sign(payload, keys.secretWord, { expiresIn : 3600 }, (err, token) => {
 
-                        if(err) throw err;
+                        // if(err) throw err;
                         res.json({
                             success : true,
                             token: 'Bearer ' + token
@@ -83,7 +87,15 @@ router.post('/login', (req,res) => {
                    return res.status(400).json({ msg : 'failed to login'});
                 }
             });
-        });
+        })
+        .catch(err => console.log(err));
+});
+
+//@route   POST api/users/admin
+//@desc    user account
+//@access  private
+router.get('/current', passport.authenticate('jwt', { session : false }), (req,res) => {
+    res.json({msg : 'success'});
 });
 
 module.exports = router;
