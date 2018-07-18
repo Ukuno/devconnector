@@ -35,7 +35,8 @@ router.post('/register', (req, res) => {
     User.findOne({email : req.body.email})
         .then(user => {
             if(user){
-                return res.status(400).json({email : 'Email already exists'});
+                errors.email = 'Email already exists';
+                return res.status(400).json(errors);
             } else {
                 const avatar = gravatar.url(req.body.email, {
                     s: '200', //size
@@ -50,6 +51,7 @@ router.post('/register', (req, res) => {
                     avatar
                 });
                 bcrypt.genSalt(10,(err, salt) => {
+                    if(err) throw err;
                     bcrypt.hash(newUser.password, salt, (err, hash) => {
                         if(err) throw err;
                         newUser.password = hash;
@@ -88,7 +90,7 @@ router.post('/login', (req,res) => {
                     //sign Token JWT
                     jwt.sign(payload, keys.secretWord, { expiresIn : 3600 }, (err, token) => {
 
-                        // if(err) throw err;
+                        if(err) throw err;
                         res.json({
                             success : true,
                             token: 'Bearer ' + token
